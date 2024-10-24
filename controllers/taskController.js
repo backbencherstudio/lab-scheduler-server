@@ -181,23 +181,48 @@ const createTask = async (req, res) => {
 const approveTask = async (req, res) => {
   try {
     const taskId = req.params.id;
-
     const tasksCollection = getDB("lab-scheduler").collection("tasks");
 
-    const result = await tasksCollection.updateOne(
+    // Find the task being approved
+    const taskToApprove = await tasksCollection.findOne({ _id: new ObjectId(taskId) });
+    if (!taskToApprove) {
+      return res.status(404).json({ success: false, message: "Task not found" });
+    }
+
+    // Approve the task
+    await tasksCollection.updateOne(
       { _id: new ObjectId(taskId) },
       { $set: { approve: "Approved" } }
     );
 
-    if (result.matchedCount === 0) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Task not found" });
+    // Find overlapping tasks to reject
+    const overlappingTasks = await tasksCollection.find({
+      _id: { $ne: new ObjectId(taskId) }, // Exclude the approved task
+      selectedMachine: taskToApprove.selectedMachine,
+      startDate: taskToApprove.startDate,
+      selectedTimeSlots: { $in: taskToApprove.selectedTimeSlots },
+      approve: "Pending"
+    }).toArray();
+
+    // Reject overlapping tasks
+    for (const task of overlappingTasks) {
+      await tasksCollection.updateOne(
+        { _id: task._id },
+        { $set: { approve: "Rejected" } }
+      );
+
+      // Optionally, send rejection email to the user
+      await transporter.sendMail({
+        from: `${process.env.USER_EMAIL}`,
+        to: task.taskCratedBy,
+        subject: "Task Request Rejected",
+        text: `Your task "${task.taskName}" has been rejected due to scheduling conflicts.`,
+      });
     }
 
     res.status(200).json({
       success: true,
-      message: "Task approved successfully.",
+      message: "Task approved successfully and conflicting tasks have been rejected.",
     });
   } catch (error) {
     console.error("Error approving task:", error);
@@ -208,6 +233,7 @@ const approveTask = async (req, res) => {
     });
   }
 };
+
 const rejectTask = async (req, res) => {
   try {
     const taskId = req.params.id;

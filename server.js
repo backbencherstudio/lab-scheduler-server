@@ -1,9 +1,12 @@
 const express = require("express");
 const cors = require("cors");
-const { connectDB } = require("./config/db");
+const { connectDB, getDB } = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
+const videoRoutes = require("./routes/videoRoutes")
 const port = 5000;
+const multer = require('multer');
+const path = require('path');
 const app = express();
 
 // Define allowed origins
@@ -35,7 +38,8 @@ app.use(express.json());
 
 connectDB();
 
-app.use("/", userRoutes, taskRoutes);
+
+app.use("/", userRoutes, taskRoutes, videoRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello From Scheduler!");

@@ -3,7 +3,7 @@ const cors = require("cors");
 const { connectDB, getDB } = require("./config/db");
 const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
-const videoRoutes = require("./routes/videoRoutes")
+const machineRoutes = require("./routes/machineRoutes");
 const port = 5000;
 const multer = require('multer');
 const path = require('path');
@@ -38,8 +38,7 @@ app.use(express.json());
 
 connectDB();
 
-
-app.use("/", userRoutes, taskRoutes, videoRoutes);
+app.use("/", userRoutes, taskRoutes, machineRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello From Scheduler!");

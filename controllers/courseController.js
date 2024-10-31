@@ -1,48 +1,48 @@
 const { ObjectId } = require("mongodb");
 const { getDB } = require("../config/db");
 
-const getMachines = async (req, res) => {
+const getCourses = async (req, res) => {
   try {
-    const machinesCollection = getDB("lab-scheduler").collection("machines");
-    const result = await machinesCollection.find().toArray();
+    const coursesCollection = getDB("lab-scheduler").collection("courses");
+    const result = await coursesCollection.find().toArray();
     res.status(200).json({
       success: true,
       data: result,
-      message: "Tag retrieved successfully",
+      message: "course retrieved successfully",
     });
   } catch (error) {
-    console.error("Error fetching Tag:", error);
+    console.error("Error fetching course:", error);
     res.status(500).json({
       success: false,
-      error: "Failed to fetch Tag",
+      error: "Failed to fetch course",
       message: error.message,
     });
   }
 };
 
-const createMachine = async (req, res) => {
+const createCourse = async (req, res) => {
   try {
     const data = req.body;
-    const machinesCollection = getDB("lab-scheduler").collection("machines");
-    const result = await machinesCollection.insertOne(data);
+    const coursesCollection = getDB("lab-scheduler").collection("courses");
+    const result = await coursesCollection.insertOne(data);
     res.status(201).json({
       success: true,
       data: { _id: result.insertedId, ...data },
-      message: "Machine created successfully",
+      message: "Course created successfully",
     });
   } catch (error) {
-    console.error("Error creating machine:", error);
+    console.error("Error creating course:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to create machine",
+      message: "Failed to create course",
       error: error.message,
     });
   }
 };
 
-const updateMachine = async (req, res) => {
+const updateCourse = async (req, res) => {
   const id = req.params.id;
-  const { title, author, tutorial,duration } = req.body;
+  const { course } = req.body;
 
   // Check if the ID is valid
   if (!ObjectId.isValid(id)) {
@@ -54,7 +54,7 @@ const updateMachine = async (req, res) => {
   }
 
   // Validate that only title and color fields are allowed
-  const allowedFields = ["title", "author", "tutorial","duration"];
+  const allowedFields = ["course"];
   const invalidFields = Object.keys(req.body).filter(
     (key) => !allowedFields.includes(key)
   );
@@ -67,34 +67,30 @@ const updateMachine = async (req, res) => {
   }
 
   try {
-    const machinesCollection = getDB("lab-scheduler").collection("machines");
+    const coursesCollection = getDB("lab-scheduler").collection("courses");
     const updateFields = {};
 
-    // Update fields only if they are provided in the request body
-    if (title !== undefined) updateFields.title = title;
-    if (author !== undefined) updateFields.author = author;
-    if (tutorial !== undefined) updateFields.tutorial = tutorial;
-    if (duration !== undefined) updateFields.duration = duration;
+    if (course !== undefined) updateFields.course = course;
 
-    const result = await machinesCollection.updateOne(
+    const result = await coursesCollection.updateOne(
       { _id: new ObjectId(id) },
       { $set: updateFields }
     );
 
     if (result.matchedCount === 0) {
-      console.error("Tag not found:", id);
+      console.error("course not found:", id);
       return res.status(404).json({
         success: false,
-        message: "Tag not found",
+        message: "course not found",
       });
     }
 
     res.status(200).json({
       success: true,
-      message: "Tag updated successfully",
+      message: "course updated successfully",
     });
   } catch (error) {
-    console.error("Error updating machine:", error);
+    console.error("Error updating course:", error);
     res.status(500).json({
       success: false,
       message: "Failed to update status",
@@ -102,39 +98,39 @@ const updateMachine = async (req, res) => {
     });
   }
 };
-const deleteMachine = async (req, res) => {
+const deleteCourse = async (req, res) => {
   const id = req.params.id;
 
   try {
-    const machinesCollection = getDB("lab-scheduler").collection("machines");
-    const result = await machinesCollection.deleteOne({
+    const coursesCollection = getDB("lab-scheduler").collection("courses");
+    const result = await coursesCollection.deleteOne({
       _id: new ObjectId(id),
     });
 
     if (result.deletedCount === 1) {
       res.status(200).json({
         success: true,
-        message: "Machine deleted successfully",
+        message: "Course deleted successfully",
       });
     } else {
       res.status(404).json({
         success: false,
-        message: "Machine not found",
+        message: "Course not found",
       });
     }
   } catch (error) {
-    console.error("Error deleting machine:", error);
+    console.error("Error deleting course:", error);
     res.status(500).json({
       success: false,
-      message: "Failed to delete machine",
+      message: "Failed to delete course",
       error: error.message,
     });
   }
 };
 
 module.exports = {
-  getMachines,
-  createMachine,
-  deleteMachine,
-  updateMachine,
+  getCourses,
+  createCourse,
+  deleteCourse,
+  updateCourse,
 };

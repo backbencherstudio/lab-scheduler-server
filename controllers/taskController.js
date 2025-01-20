@@ -334,7 +334,6 @@ const approveTask = async (req, res) => {
     
     const tasksCollection = getDB("lab-scheduler").collection("tasks");
 
-
     const taskData = await tasksCollection.findOne({
       _id: new ObjectId(taskId),
     });
@@ -564,23 +563,42 @@ const rejectTask = async (req, res) => {
   }
 };
 
-
-
 const getTasks = async (req, res) => {
   const username = req.query.username;
 
   let filter = {};
-
   if (username) {
     filter = { createdBy: username };
   }
 
   try {
     const tasksCollection = getDB("lab-scheduler").collection("tasks");
+    
     const result = await tasksCollection
-      .find(filter) // Apply the filter (either empty or with username)
-      .sort({ _id: -1 }) // Sort by ID in descending order
+      .find(filter)
+      .sort({ _id: -1 })
       .toArray();
+
+      const now = new Date();
+      now.setHours(0, 0, 0, 0); // Set to the start of the current day (midnight)
+      
+      const updatePromises = result.map(async (task) => {
+        if (task.startDate) {
+          const taskDate = new Date(task.startDate);
+      
+          // Check if the task date is before the start of today
+          if (taskDate < now) {
+            await tasksCollection.updateOne(
+              { _id: task._id },
+              { $set: { approve: 'Completed' } }
+            );
+          }
+        }
+      });
+      
+      
+
+    await Promise.all(updatePromises);
 
     res.status(200).json({
       success: true,
@@ -597,9 +615,48 @@ const getTasks = async (req, res) => {
   }
 };
 
+const removeTasks = async (req, res) => {
+  const taskId = req.params.id; // Assume the task ID is sent as a route parameter
+
+  if (!taskId) {
+    return res.status(400).json({
+      success: false,
+      message: "Task ID is required",
+    });
+  }
+
+  try {
+    const tasksCollection = getDB("lab-scheduler").collection("tasks");
+    
+    // Use the deleteOne method to remove the task
+    const result = await tasksCollection.deleteOne({ _id: new ObjectId(taskId) });
+
+    if (result.deletedCount === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Task not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: "Task removed successfully",
+    });
+  } catch (error) {
+    console.error("Error removing task:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to remove task",
+      message: error.message,
+    });
+  }
+};
+
+
 module.exports = {
   getTasks,
   createTask,
   approveTask,
   rejectTask,
+  removeTasks,
 };

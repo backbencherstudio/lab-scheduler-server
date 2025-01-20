@@ -1,5 +1,5 @@
 const express = require("express");
-const { createTutorial, getTutorials, updateTutorial, deleteTutorial } = require("../controllers/tutorialController");
+const {  getTutorials, updateTutorial, deleteTutorial, createTutorial } = require("../controllers/tutorialController");
 
 const router = express.Router();
 

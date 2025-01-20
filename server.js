@@ -5,7 +5,7 @@ const userRoutes = require("./routes/userRoutes");
 const taskRoutes = require("./routes/taskRoutes");
 const machineRoutes = require("./routes/machineRoutes");
 const courseRoutes = require("./routes/coursesRoutes");
-const tutoralsRoutes = require("./routes/tutorialsRoutes");
+const tutorialsRoutes = require("./routes/tutorialsRoutes");
 const port = 5000;
 const multer = require('multer');
 const path = require('path');
@@ -40,7 +40,7 @@ app.use(express.json());
 
 connectDB();
 
-app.use("/", userRoutes, taskRoutes, machineRoutes, courseRoutes, tutoralsRoutes);
+app.use("/", userRoutes, taskRoutes, machineRoutes ,courseRoutes, tutorialsRoutes);
 
 app.get("/", (req, res) => {
   res.send("Hello From Scheduler!");
